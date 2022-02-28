@@ -1,0 +1,30 @@
+name: Build & Publish
+
+on:
+  push:
+    branches:
+      - source
+
+jobs:
+  build-site:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install composer dependencies
+      run: composer install --no-ansi --no-interaction --no-scripts --no-suggests --no-progress --prefer-dist
+    - name: Install NPM dependencies
+      run: npm install
+    - name: Build Site
+      run: npm run production
+    - name: Stage files
+      run: git add -f build_production
+    - name: Commit files
+      run: |
+        git config --local user.email "actions@github.com"
+        git config --local user.name "Github Actions"
+        git commit -m "Build for deploy"
+    - name: Publish
+      run: |
+        git subtree split --prefix build_production -b master
+        git push -f origin master:master
+        git branch -D master
